@@ -1,9 +1,12 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from django.urls import path
-from .views import CustomUserAPIView
+from .endpoints import CustomUserViewSet
+
+
+router = DefaultRouter()
+router.register("custom_user_set", CustomUserViewSet)
+
 
 urlpatterns = [
-    path('users/', CustomUserAPIView.as_view(), name='customuser_api'),
-    path('users/<int:pk>', CustomUserAPIView.as_view(), name='customuser_api'),
-]
-
+    path("", include(router.urls)), ]

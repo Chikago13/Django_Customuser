@@ -1,11 +1,9 @@
-from rest_framework.serializers import ModelSerializer
-from rest_framework import serializers, status
-from .models import CustomUser
+from rest_framework import serializers
 
-class EmailValidator:
-    def __call__(self, value):
-        if value.endswith(('.com', '.by', '.ru')):
-            raise serializers.ValidationError("Недопустимое значение для поля email")
+from .models import CustomUser
+from .validators import correction_email
+from .exceptions import EmailValidationError
+
 
 class CustomUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -14,8 +12,16 @@ class CustomUserSerializer(serializers.Serializer):
     recommendation = serializers.JSONField(default=dict, allow_null=True)
     role = serializers.ChoiceField(choices=CustomUser.Roles.choices)
 
-        
+    def validate_email(self, value):
+        try:
+            correction_email(value)
+            return value
+        except EmailValidationError:
+            raise serializers.ValidationError("Email cannot ends with '.com', '.by', '.ru'.")
+
     def create(self, validated_data):
+        email = validated_data.get("email")
+        self.validate_email(value=email)
         return CustomUser.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
